@@ -23,6 +23,7 @@ for i in range(1,len(seq)):
 print("Probability of sequence " + seq + ": " + str(curr['H']+curr['L']))
 
 #Viterbi algorithm
+#pl(i,x) = el(i)*maxk(pk(j,x-1)*pkl)
 #transition probabilities
 ST = {'H':-1,'L':-1}
 HT = {'H':-1,'L':-1}
