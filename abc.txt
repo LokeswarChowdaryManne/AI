@@ -1,0 +1,1452 @@
+Here are some OpenMP questions that involve algorithms or problems that can be run both 
+sequentially and in parallel, allowing for a comparison of execution times. Each question 
+includes a sample OpenMP C code implementation. 
+
+--------------------------------------------------------------------------------------
+ 
+Question 1: Matrix Multiplication 
+Write an OpenMP program to perform matrix multiplication. Compare the execution time of the 
+sequential and parallel implementations. Use the parallel for directive to parallelize the 
+computation. Ensure proper handling of shared variables. 
+ 
+OpenMP C Code: 
+c 
+Copy 
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <omp.h> 
+ 
+#define N 1000 
+ 
+void matrix_multiply(int A[N][N], int B[N][N], int C[N][N]) { 
+    #pragma omp parallel for 
+    for (int i = 0; i < N; i++) { 
+        for (int j = 0; j < N; j++) { 
+            C[i][j] = 0; 
+            for (int k = 0; k < N; k++) { 
+                C[i][j] += A[i][k] * B[k][j]; 
+            } 
+        } 
+    } 
+} 
+ 
+int main() { 
+    int A[N][N], B[N][N], C[N][N]; 
+     
+    // Initialize matrices A and B 
+    for (int i = 0; i < N; i++) { 
+        for (int j = 0; j < N; j++) { 
+            A[i][j] = rand() % 100; 
+            B[i][j] = rand() % 100; 
+        } 
+    } 
+ 
+    double start_time = omp_get_wtime(); 
+    matrix_multiply(A, B, C); 
+    double end_time = omp_get_wtime(); 
+ 
+    printf("Time taken: %f seconds\n", end_time - start_time); 
+ 
+    return 0; 
+} 
+
+------------------------------------------------------------------------------------------------
+
+Question 2: Parallel Reduction for Maximum Value 
+Write an OpenMP program to find the maximum value in a large array using parallel reduction. 
+Compare the execution time of the sequential and parallel implementations. 
+ 
+OpenMP C Code: 
+c 
+Copy 
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <omp.h> 
+ 
+#define N 1000000 
+ 
+int main() { 
+    int arr[N]; 
+    int max_val = -1; 
+ 
+    // Initialize array with random values 
+    for (int i = 0; i < N; i++) { 
+        arr[i] = rand() % 1000000; 
+    } 
+ 
+    double start_time = omp_get_wtime(); 
+ 
+    #pragma omp parallel for reduction(max:max_val) 
+    for (int i = 0; i < N; i++) { 
+        if (arr[i] > max_val) { 
+            max_val = arr[i]; 
+        } 
+    } 
+ 
+    double end_time = omp_get_wtime(); 
+ 
+    printf("Maximum value: %d\n", max_val); 
+    printf("Time taken: %f seconds\n", end_time - start_time); 
+ 
+    return 0; 
+} 
+
+----------------------------------------------------------------------------------------
+
+Question 3: Parallel Prefix Sum (Scan) 
+Write an OpenMP program to compute the prefix sum (scan) of an array. Compare the 
+execution time of the sequential and parallel implementations. 
+ 
+OpenMP C Code: 
+c 
+Copy 
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <omp.h> 
+ 
+#define N 1000000 
+ 
+void prefix_sum(int arr[N], int prefix[N]) { 
+    prefix[0] = arr[0]; 
+ 
+    #pragma omp parallel for 
+    for (int i = 1; i < N; i++) { 
+        prefix[i] = prefix[i - 1] + arr[i]; 
+    } 
+} 
+ 
+int main() { 
+    int arr[N], prefix[N]; 
+ 
+    // Initialize array with random values 
+    for (int i = 0; i < N; i++) { 
+        arr[i] = rand() % 10; 
+    } 
+ 
+    double start_time = omp_get_wtime(); 
+    prefix_sum(arr, prefix); 
+    double end_time = omp_get_wtime(); 
+ 
+    printf("Time taken: %f seconds\n", end_time - start_time); 
+ 
+    return 0; 
+} 
+
+-------------------------------------------------------------------------------------------
+
+Question 4: Parallel QuickSort 
+Write an OpenMP program to implement the QuickSort algorithm in parallel. Compare the 
+execution time of the sequential and parallel implementations. 
+ 
+OpenMP C Code: 
+c 
+Copy 
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <omp.h> 
+ 
+#define N 1000000 
+ 
+void swap(int* a, int* b) { 
+    int t = *a; 
+    *a = *b; 
+    *b = t; 
+} 
+ 
+int partition(int arr[], int low, int high) { 
+    int pivot = arr[high]; 
+    int i = (low - 1); 
+ 
+    for (int j = low; j <= high - 1; j++) { 
+        if (arr[j] < pivot) { 
+            i++; 
+            swap(&arr[i], &arr[j]); 
+        } 
+    } 
+    swap(&arr[i + 1], &arr[high]); 
+    return (i + 1); 
+} 
+ 
+void quicksort(int arr[], int low, int high) { 
+    if (low < high) { 
+        int pi = partition(arr, low, high); 
+ 
+        #pragma omp parallel sections 
+        { 
+            #pragma omp section 
+            quicksort(arr, low, pi - 1); 
+ 
+            #pragma omp section 
+            quicksort(arr, pi + 1, high); 
+        } 
+    } 
+} 
+ 
+int main() { 
+    int arr[N]; 
+ 
+    // Initialize array with random values 
+    for (int i = 0; i < N; i++) { 
+        arr[i] = rand() % 1000000; 
+    } 
+ 
+    double start_time = omp_get_wtime(); 
+    quicksort(arr, 0, N - 1); 
+    double end_time = omp_get_wtime(); 
+ 
+    printf("Time taken: %f seconds\n", end_time - start_time); 
+ 
+    return 0; 
+} 
+
+------------------------------------------------------------------------------------------------
+
+Question 5: Parallel Monte Carlo Pi Estimation 
+Write an OpenMP program to estimate the value of Pi using the Monte Carlo method. Compare 
+the execution time of the sequential and parallel implementations. 
+ 
+OpenMP C Code: 
+c 
+Copy 
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <omp.h> 
+#include <time.h> 
+ 
+#define N 1000000 
+ 
+int main() { 
+    int i, count = 0; 
+    double x, y, pi; 
+    srand(time(NULL)); 
+ 
+    double start_time = omp_get_wtime(); 
+ 
+    #pragma omp parallel for private(x, y) reduction(+:count) 
+    for (i = 0; i < N; i++) { 
+        x = (double)rand() / RAND_MAX; 
+        y = (double)rand() / RAND_MAX; 
+        if (x * x + y * y <= 1.0) { 
+            count++; 
+        } 
+    } 
+ 
+    pi = 4.0 * count / N; 
+    double end_time = omp_get_wtime(); 
+ 
+    printf("Estimated Pi: %f\n", pi); 
+    printf("Time taken: %f seconds\n", end_time - start_time); 
+ 
+    return 0; 
+} 
+These questions and code examples provide a good mix of algorithmic complexity and parallel 
+programming concepts. You can modify the problem size (e.g., N) to observe how the execution 
+time scales with sequential and parallel implementations. 
+ 
+give more like this 
+Here are more OpenMP questions that involve algorithms or problems suitable for both 
+sequential and parallel execution. Each question includes a sample OpenMP C code 
+implementation. 
+ 
+
+-----------------------------------------------------------------------------------------------------
+
+Question 6: Parallel Merge Sort 
+Write an OpenMP program to implement the Merge Sort algorithm in parallel. Compare the 
+execution time of the sequential and parallel implementations. 
+ 
+OpenMP C Code: 
+c 
+Copy 
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <omp.h> 
+ 
+#define N 1000000 
+ 
+void merge(int arr[], int l, int m, int r) { 
+    int i, j, k; 
+    int n1 = m - l + 1; 
+    int n2 = r - m; 
+ 
+    int L[n1], R[n2]; 
+ 
+    for (i = 0; i < n1; i++) 
+        L[i] = arr[l + i]; 
+    for (j = 0; j < n2; j++) 
+        R[j] = arr[m + 1 + j]; 
+ 
+    i = 0; 
+    j = 0; 
+    k = l; 
+    while (i < n1 && j < n2) { 
+        if (L[i] <= R[j]) { 
+            arr[k] = L[i]; 
+            i++; 
+        } else { 
+            arr[k] = R[j]; 
+            j++; 
+        } 
+        k++; 
+    } 
+ 
+    while (i < n1) { 
+        arr[k] = L[i]; 
+        i++; 
+        k++; 
+    } 
+ 
+    while (j < n2) { 
+        arr[k] = R[j]; 
+        j++; 
+        k++; 
+    } 
+} 
+ 
+void mergeSort(int arr[], int l, int r) { 
+    if (l < r) { 
+        int m = l + (r - l) / 2; 
+ 
+        #pragma omp parallel sections 
+        { 
+            #pragma omp section 
+            mergeSort(arr, l, m); 
+ 
+            #pragma omp section 
+            mergeSort(arr, m + 1, r); 
+        } 
+ 
+        merge(arr, l, m, r); 
+    } 
+} 
+ 
+int main() { 
+    int arr[N]; 
+ 
+    // Initialize array with random values 
+    for (int i = 0; i < N; i++) { 
+        arr[i] = rand() % 1000000; 
+    } 
+ 
+    double start_time = omp_get_wtime(); 
+    mergeSort(arr, 0, N - 1); 
+    double end_time = omp_get_wtime(); 
+ 
+    printf("Time taken: %f seconds\n", end_time - start_time); 
+ 
+    return 0; 
+} 
+
+--------------------------------------------------------------------------------------------
+
+Question 7: Parallel Breadth-First Search (BFS) 
+Write an OpenMP program to perform Breadth-First Search (BFS) on a graph in parallel. 
+Compare the execution time of the sequential and parallel implementations. 
+ 
+OpenMP C Code: 
+c 
+Copy 
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <omp.h> 
+ 
+#define N 1000 
+ 
+int graph[N][N]; 
+int visited[N]; 
+ 
+void bfs(int start) { 
+    int queue[N]; 
+    int front = 0, rear = 0; 
+ 
+    queue[rear++] = start; 
+    visited[start] = 1; 
+ 
+    while (front < rear) { 
+        int node = queue[front++]; 
+ 
+        #pragma omp parallel for 
+        for (int i = 0; i < N; i++) { 
+            if (graph[node][i] && !visited[i]) { 
+                #pragma omp critical 
+                { 
+                    queue[rear++] = i; 
+                    visited[i] = 1; 
+                } 
+            } 
+        } 
+    } 
+} 
+ 
+int main() { 
+    // Initialize graph with random edges 
+    for (int i = 0; i < N; i++) { 
+        for (int j = 0; j < N; j++) { 
+            graph[i][j] = rand() % 2; 
+        } 
+    } 
+ 
+    double start_time = omp_get_wtime(); 
+    bfs(0); 
+    double end_time = omp_get_wtime(); 
+ 
+    printf("Time taken: %f seconds\n", end_time - start_time); 
+ 
+    return 0; 
+} 
+
+------------------------------------------------------------------------------------------------
+
+Question 8: Parallel Floyd-Warshall Algorithm 
+Write an OpenMP program to implement the Floyd-Warshall algorithm for finding shortest paths 
+in a graph. Compare the execution time of the sequential and parallel implementations. 
+ 
+OpenMP C Code: 
+c 
+Copy 
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <omp.h> 
+ 
+#define N 1000 
+#define INF 99999 
+ 
+void floydWarshall(int dist[N][N]) { 
+    #pragma omp parallel for 
+    for (int k = 0; k < N; k++) { 
+        for (int i = 0; i < N; i++) { 
+            for (int j = 0; j < N; j++) { 
+                if (dist[i][k] + dist[k][j] < dist[i][j]) { 
+                    dist[i][j] = dist[i][k] + dist[k][j]; 
+                } 
+            } 
+        } 
+    } 
+} 
+ 
+int main() { 
+    int dist[N][N]; 
+ 
+    // Initialize distance matrix with random values 
+    for (int i = 0; i < N; i++) { 
+        for (int j = 0; j < N; j++) { 
+            if (i == j) { 
+                dist[i][j] = 0; 
+            } else { 
+                dist[i][j] = rand() % 100; 
+                if (dist[i][j] == 0) { 
+                    dist[i][j] = INF; 
+                } 
+            } 
+        } 
+    } 
+ 
+    double start_time = omp_get_wtime(); 
+    floydWarshall(dist); 
+    double end_time = omp_get_wtime(); 
+ 
+    printf("Time taken: %f seconds\n", end_time - start_time); 
+ 
+    return 0; 
+} 
+
+-------------------------------------------------------------------------------------------------
+
+Question 9: Parallel Matrix Transposition 
+Write an OpenMP program to transpose a matrix in parallel. Compare the execution time of the 
+sequential and parallel implementations. 
+ 
+OpenMP C Code: 
+c 
+Copy 
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <omp.h> 
+ 
+#define N 1000 
+ 
+void transpose(int A[N][N], int B[N][N]) { 
+    #pragma omp parallel for 
+    for (int i = 0; i < N; i++) { 
+        for (int j = 0; j < N; j++) { 
+            B[j][i] = A[i][j]; 
+        } 
+    } 
+} 
+ 
+int main() { 
+    int A[N][N], B[N][N]; 
+ 
+    // Initialize matrix A with random values 
+    for (int i = 0; i < N; i++) { 
+        for (int j = 0; j < N; j++) { 
+            A[i][j] = rand() % 100; 
+        } 
+    } 
+ 
+    double start_time = omp_get_wtime(); 
+    transpose(A, B); 
+    double end_time = omp_get_wtime(); 
+ 
+    printf("Time taken: %f seconds\n", end_time - start_time); 
+ 
+    return 0; 
+} 
+
+----------------------------------------------------------------------------------------------
+
+Question 10: Parallel Histogram Calculation 
+Write an OpenMP program to calculate the histogram of a large array in parallel. Compare the 
+execution time of the sequential and parallel implementations. 
+ 
+OpenMP C Code: 
+c 
+Copy 
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <omp.h> 
+ 
+#define N 1000000 
+#define BINS 10 
+ 
+int main() { 
+    int arr[N]; 
+    int histogram[BINS] = {0}; 
+ 
+    // Initialize array with random values 
+    for (int i = 0; i < N; i++) { 
+        arr[i] = rand() % BINS; 
+    } 
+ 
+    double start_time = omp_get_wtime(); 
+ 
+    #pragma omp parallel for 
+    for (int i = 0; i < N; i++) { 
+        #pragma omp atomic 
+        histogram[arr[i]]++; 
+    } 
+ 
+    double end_time = omp_get_wtime(); 
+ 
+    printf("Histogram:\n"); 
+    for (int i = 0; i < BINS; i++) { 
+        printf("Bin %d: %d\n", i, histogram[i]); 
+    } 
+    printf("Time taken: %f seconds\n", end_time - start_time); 
+ 
+    return 0; 
+} 
+
+---------------------------------------------------------------------------------------------------
+
+Question 11: Parallel Sieve of Eratosthenes 
+Write an OpenMP program to implement the Sieve of Eratosthenes algorithm for finding prime 
+numbers in parallel. Compare the execution time of the sequential and parallel implementations. 
+ 
+OpenMP C Code: 
+c 
+Copy 
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <omp.h> 
+#include <math.h> 
+ 
+#define N 1000000 
+ 
+void sieve(int primes[N]) { 
+    #pragma omp parallel for 
+    for (int i = 2; i <= sqrt(N); i++) { 
+        if (primes[i]) { 
+            for (int j = i * i; j < N; j += i) { 
+                primes[j] = 0; 
+            } 
+        } 
+    } 
+} 
+ 
+int main() { 
+    int primes[N]; 
+    for (int i = 0; i < N; i++) { 
+        primes[i] = 1; 
+    } 
+    primes[0] = primes[1] = 0; 
+ 
+    double start_time = omp_get_wtime(); 
+    sieve(primes); 
+    double end_time = omp_get_wtime(); 
+ 
+    printf("Primes up to %d:\n", N); 
+    for (int i = 2; i < N; i++) { 
+        if (primes[i]) { 
+            printf("%d ", i); 
+        } 
+    } 
+    printf("\nTime taken: %f seconds\n", end_time - start_time); 
+ 
+    return 0; 
+} 
+These questions and code examples cover a variety of algorithms and problems that can be 
+parallelized using OpenMP. They are designed to help you compare the performance of 
+sequential and parallel implementations effectively. 
+ 
+give more like this little  complex 
+Here are some slightly more complex OpenMP questions that involve algorithms or problems 
+suitable for both sequential and parallel execution. Each question includes a sample OpenMP C 
+code implementation. 
+
+
+----------------------------------------------------------------------------------------------
+ 
+Question 12: Parallel Matrix Determinant Calculation 
+Write an OpenMP program to calculate the determinant of a matrix using parallelization. 
+Compare the execution time of the sequential and parallel implementations. 
+ 
+OpenMP C Code: 
+c 
+Copy 
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <omp.h> 
+ 
+#define N 100 
+ 
+int determinant(int mat[N][N], int n) { 
+    int det = 0; 
+    if (n == 1) return mat[0][0]; 
+ 
+    int temp[N][N]; 
+    int sign = 1; 
+ 
+    #pragma omp parallel for reduction(+:det) private(temp, sign) 
+    for (int f = 0; f < n; f++) { 
+        int i = 0, j = 0; 
+        for (int row = 1; row < n; row++) { 
+            for (int col = 0; col < n; col++) { 
+                if (col == f) continue; 
+                temp[i][j++] = mat[row][col]; 
+                if (j == n - 1) { 
+                    j = 0; 
+                    i++; 
+                } 
+            } 
+        } 
+        det += sign * mat[0][f] * determinant(temp, n - 1); 
+        sign = -sign; 
+    } 
+    return det; 
+} 
+ 
+int main() { 
+    int mat[N][N]; 
+ 
+    // Initialize matrix with random values 
+    for (int i = 0; i < N; i++) { 
+        for (int j = 0; j < N; j++) { 
+            mat[i][j] = rand() % 10; 
+        } 
+    } 
+ 
+    double start_time = omp_get_wtime(); 
+    int det = determinant(mat, N); 
+    double end_time = omp_get_wtime(); 
+ 
+    printf("Determinant: %d\n", det); 
+    printf("Time taken: %f seconds\n", end_time - start_time); 
+ 
+    return 0; 
+} 
+
+------------------------------------------------------------------------------------------------
+
+Question 13: Parallel Convolution of Two Matrices 
+Write an OpenMP program to perform the convolution of two matrices in parallel. Compare the 
+execution time of the sequential and parallel implementations. 
+ 
+OpenMP C Code: 
+c 
+Copy 
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <omp.h> 
+ 
+#define N 100 
+#define KERNEL_SIZE 3 
+ 
+void convolution(int input[N][N], int kernel[KERNEL_SIZE][KERNEL_SIZE], int output[N][N]) { 
+    int pad = KERNEL_SIZE / 2; 
+ 
+    #pragma omp parallel for 
+    for (int i = pad; i < N - pad; i++) { 
+        for (int j = pad; j < N - pad; j++) { 
+            int sum = 0; 
+            for (int ki = 0; ki < KERNEL_SIZE; ki++) { 
+                for (int kj = 0; kj < KERNEL_SIZE; kj++) { 
+                    sum += input[i - pad + ki][j - pad + kj] * kernel[ki][kj]; 
+                } 
+            } 
+            output[i][j] = sum; 
+        } 
+    } 
+} 
+ 
+int main() { 
+    int input[N][N], kernel[KERNEL_SIZE][KERNEL_SIZE], output[N][N]; 
+ 
+    // Initialize input matrix and kernel 
+    for (int i = 0; i < N; i++) { 
+        for (int j = 0; j < N; j++) { 
+            input[i][j] = rand() % 10; 
+        } 
+    } 
+    for (int i = 0; i < KERNEL_SIZE; i++) { 
+        for (int j = 0; j < KERNEL_SIZE; j++) { 
+            kernel[i][j] = rand() % 3 - 1; // Random kernel values between -1 and 1 
+        } 
+    } 
+ 
+    double start_time = omp_get_wtime(); 
+    convolution(input, kernel, output); 
+    double end_time = omp_get_wtime(); 
+ 
+    printf("Time taken: %f seconds\n", end_time - start_time); 
+ 
+    return 0; 
+} 
+
+-----------------------------------------------------------------------------------------------
+
+Question 14: Parallel PageRank Algorithm 
+Write an OpenMP program to implement the PageRank algorithm in parallel. Compare the 
+execution time of the sequential and parallel implementations. 
+ 
+OpenMP C Code: 
+c 
+Copy 
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <omp.h> 
+ 
+#define N 1000 
+#define DAMPING_FACTOR 0.85 
+#define MAX_ITER 100 
+ 
+void pagerank(double graph[N][N], double ranks[N]) { 
+    double new_ranks[N]; 
+    double damping_value = (1.0 - DAMPING_FACTOR) / N; 
+ 
+    for (int iter = 0; iter < MAX_ITER; iter++) { 
+        #pragma omp parallel for 
+        for (int i = 0; i < N; i++) { 
+            new_ranks[i] = damping_value; 
+            for (int j = 0; j < N; j++) { 
+                if (graph[j][i] != 0) { 
+                    new_ranks[i] += DAMPING_FACTOR * ranks[j] / graph[j][i]; 
+                } 
+            } 
+        } 
+ 
+        #pragma omp parallel for 
+        for (int i = 0; i < N; i++) { 
+            ranks[i] = new_ranks[i]; 
+        } 
+    } 
+} 
+ 
+int main() { 
+    double graph[N][N], ranks[N]; 
+ 
+    // Initialize graph and ranks 
+    for (int i = 0; i < N; i++) { 
+        ranks[i] = 1.0 / N; 
+        for (int j = 0; j < N; j++) { 
+            graph[i][j] = rand() % 2; // Random adjacency matrix 
+        } 
+    } 
+ 
+    double start_time = omp_get_wtime(); 
+    pagerank(graph, ranks); 
+    double end_time = omp_get_wtime(); 
+ 
+    printf("Time taken: %f seconds\n", end_time - start_time); 
+ 
+    return 0; 
+} 
+
+-------------------------------------------------------------------------------------------------
+
+Question 15: Parallel K-Means Clustering 
+Write an OpenMP program to implement the K-Means clustering algorithm in parallel. Compare 
+the execution time of the sequential and parallel implementations. 
+ 
+OpenMP C Code: 
+c 
+Copy 
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <omp.h> 
+#include <math.h> 
+ 
+#define N 10000 
+#define K 4 
+#define DIM 2 
+#define MAX_ITER 100 
+ 
+typedef struct { 
+    double coords[DIM]; 
+    int cluster; 
+} Point; 
+ 
+void kmeans(Point points[N], Point centroids[K]) { 
+    for (int iter = 0; iter < MAX_ITER; iter++) { 
+        // Assign points to clusters 
+        #pragma omp parallel for 
+        for (int i = 0; i < N; i++) { 
+            double min_dist = INFINITY; 
+            for (int j = 0; j < K; j++) { 
+                double dist = 0; 
+                for (int d = 0; d < DIM; d++) { 
+                    dist += pow(points[i].coords[d] - centroids[j].coords[d], 2); 
+                } 
+                if (dist < min_dist) { 
+                    min_dist = dist; 
+                    points[i].cluster = j; 
+                } 
+            } 
+        } 
+ 
+        // Update centroids 
+        int count[K] = {0}; 
+        double sum[K][DIM] = {0}; 
+ 
+        #pragma omp parallel for reduction(+:count[:K], sum[:K][:DIM]) 
+        for (int i = 0; i < N; i++) { 
+            int cluster = points[i].cluster; 
+            count[cluster]++; 
+            for (int d = 0; d < DIM; d++) { 
+                sum[cluster][d] += points[i].coords[d]; 
+            } 
+        } 
+ 
+        #pragma omp parallel for 
+        for (int j = 0; j < K; j++) { 
+            for (int d = 0; d < DIM; d++) { 
+                centroids[j].coords[d] = sum[j][d] / count[j]; 
+            } 
+        } 
+    } 
+} 
+ 
+int main() { 
+    Point points[N], centroids[K]; 
+ 
+    // Initialize points and centroids 
+    for (int i = 0; i < N; i++) { 
+        for (int d = 0; d < DIM; d++) { 
+            points[i].coords[d] = (double)rand() / RAND_MAX * 100; 
+        } 
+    } 
+    for (int j = 0; j < K; j++) { 
+        for (int d = 0; d < DIM; d++) { 
+            centroids[j].coords[d] = (double)rand() / RAND_MAX * 100; 
+        } 
+    } 
+ 
+    double start_time = omp_get_wtime(); 
+    kmeans(points, centroids); 
+    double end_time = omp_get_wtime(); 
+ 
+    printf("Time taken: %f seconds\n", end_time - start_time); 
+ 
+    return 0; 
+} 
+
+----------------------------------------------------------------------------------------------
+
+Question 16: Parallel Fast Fourier Transform (FFT) 
+Write an OpenMP program to implement the Fast Fourier Transform (FFT) algorithm in parallel. 
+Compare the execution time of the sequential and parallel implementations. 
+ 
+OpenMP C Code: 
+c 
+Copy 
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <omp.h> 
+#include <math.h> 
+#include <complex.h> 
+ 
+#define N 1024 
+ 
+void fft(complex double *x, int n) { 
+    if (n <= 1) return; 
+ 
+    complex double even[n / 2], odd[n / 2]; 
+    for (int i = 0; i < n / 2; i++) { 
+        even[i] = x[2 * i]; 
+        odd[i] = x[2 * i + 1]; 
+    } 
+ 
+    #pragma omp parallel sections 
+    { 
+        #pragma omp section 
+        fft(even, n / 2); 
+ 
+        #pragma omp section 
+        fft(odd, n / 2); 
+    } 
+ 
+    for (int k = 0; k < n / 2; k++) { 
+        complex double t = cexp(-2 * I * M_PI * k / n) * odd[k]; 
+        x[k] = even[k] + t; 
+        x[k + n / 2] = even[k] - t; 
+    } 
+} 
+ 
+int main() { 
+    complex double x[N]; 
+ 
+    // Initialize input array 
+    for (int i = 0; i < N; i++) { 
+        x[i] = (double)rand() / RAND_MAX; 
+    } 
+ 
+    double start_time = omp_get_wtime(); 
+    fft(x, N); 
+    double end_time = omp_get_wtime(); 
+ 
+    printf("Time taken: %f seconds\n", end_time - start_time); 
+ 
+    return 0; 
+} 
+
+
+----------------------------------------------------------------------
+
+/*
+**  PROGRAM: A simple SPMD producer/consumer program
+**
+**  PURPOSE: this is just a stupid little program to play around
+**  with different ways data is shared between threads.
+**
+**  HISTORY: Written by Tim Mattson, April 2007.
+*/
+#include "omp.h"
+#ifndef APPLE
+#include <malloc.h>
+#endif
+#include <stdio.h>
+#include <stdlib.h>
+
+#define N        10000
+#define Nthreads 2
+
+/* Some random number constants from numerical recipies */
+#define SEED       2531
+#define RAND_MULT  1366
+#define RAND_ADD   150889
+#define RAND_MOD   714025
+int randy = SEED;
+
+/* function to fill an array with random numbers */
+void fill_rand(int length, double *a)
+{
+   int i; 
+   for (i=0;i<length;i++) {
+     randy = (RAND_MULT * randy + RAND_ADD) % RAND_MOD;
+     *(a+i) = ((double) randy)/((double) RAND_MOD);
+   }   
+}
+
+/* function to sum the elements of an array */
+double Sum_array(int length, double *a)
+{
+   int i;  double sum = 0.0;
+   for (i=0;i<length;i++)  sum += *(a+i);  
+   return sum; 
+}
+  
+int main()
+{
+  double *A, sum, runtime;
+  int numthreads, flag = 0;
+
+  omp_set_num_threads(Nthreads);
+
+  A = (double *)malloc(N*sizeof(double));
+
+  #pragma omp parallel
+  {
+     #pragma omp master
+     {
+        numthreads = omp_get_num_threads();
+        if(numthreads != 2)
+        {
+           printf("error: incorect number of threads, %d \n",numthreads);
+           exit(-1);
+        }
+        runtime = omp_get_wtime();
+     }
+     #pragma omp barrier
+
+     #pragma omp sections
+     {
+        #pragma omp section
+        {
+           fill_rand(N, A);
+           #pragma omp flush
+           flag = 1;
+           #pragma omp flush (flag)
+        }
+        #pragma omp section
+        {
+           #pragma omp flush (flag)
+           while (flag != 1){
+              #pragma omp flush (flag)
+           }
+
+           #pragma omp flush 
+           sum = Sum_array(N, A);
+        }
+      }
+      #pragma omp master
+         runtime = omp_get_wtime() - runtime;
+   }  
+
+   printf(" with %d threads and %lf seconds, The sum is %lf \n",numthreads,runtime,sum);
+}
+ 
+
+----------------------------------------------------------------------
+
+
+
+//**********************************************************
+// Parallel Pseudo random number generator:
+//
+// USAGE:
+//
+//  The pseudo random sequence is seeded with a range
+//
+//            void seed(lower_limit, higher_limit)
+//   
+//  and then subsequent calls to the random number generator 
+//  generates values in the sequence:
+//
+//            double drandom()
+//
+//  A leap frog method is used to assure non-overlapping
+//  sequences for each thread.
+//
+//  Note: these functions are to be called from inside the
+//  the OpenMP parallel region that will use the sequence.
+//
+//  BACKGROUND:
+//
+//  We are using a modulus of 2^31-1 and a multiplier from 
+//  the Hoaglin LCGs in the following article:
+//
+//    http://random.mat.sbg.ac.at/~charly/server/node3.html#lcg
+//
+//   we are using a zero addend just to make the leap frog 
+//   algorithm easier to implement.
+//
+//  HISTORY:
+//
+//  9/2008: Written by Tim Mattson by cutting and pasting 
+//  from a generator written by Larry Meadows
+//
+//***********************************************************
+#include <omp.h>
+
+static unsigned long long MULTIPLIER  = 764261123;
+static unsigned long long PMOD        = 2147483647;
+static unsigned long long mult_n;
+double random_low, random_hi;
+
+#define MAX_THREADS 128
+static unsigned long long pseed[MAX_THREADS][4]; //[4] to padd to cache line
+                                                 //size to avoid false sharing
+unsigned long long random_last = 0;
+#pragma omp threadprivate(random_last)
+
+
+double drandom()
+{
+    unsigned long long random_next;
+    double ret_val;
+
+// 
+// compute an integer random number from zero to mod
+//
+    random_next = (unsigned long long)((mult_n  * random_last)% PMOD);
+    random_last = random_next;
+
+//
+// shift into preset range
+//
+    ret_val = ((double)random_next/(double)PMOD)*(random_hi-random_low)+random_low;
+    return ret_val;
+}
+
+//
+// set the seed, the multiplier and the range
+//
+void seed(double low_in, double hi_in)
+{
+   int i, id, nthreads;
+   unsigned long long iseed;
+   id = omp_get_thread_num();
+
+   #pragma omp single
+   {
+      if(low_in < hi_in)
+      { 
+         random_low = low_in;
+         random_hi  = hi_in;
+      }
+      else
+      {
+         random_low = hi_in;
+         random_hi  = low_in;
+      }
+  
+//
+// The Leapfrog method ... adjust the multiplier so you stride through
+// the sequence by increments of "nthreads" and adust seeds so each 
+// thread starts with the right offset
+//
+
+      nthreads = omp_get_num_threads();
+      iseed = PMOD/MULTIPLIER;     // just pick a reasonable seed
+      pseed[0][0] = iseed;
+      mult_n = MULTIPLIER;
+      for (i = 1; i < nthreads; ++i)
+      {
+	iseed = (unsigned long long)((MULTIPLIER * iseed) % PMOD);
+	pseed[i][0] = iseed;
+	mult_n = (mult_n * MULTIPLIER) % PMOD;
+      }
+
+   }
+   random_last = (unsigned long long) pseed[id][0];
+}
+
+
+----------------------------------------------------------------------
+
+//C OpenMP Code for Dining Philosophers
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <omp.h>
+
+#define NUM_PHILOSOPHERS 5
+#define THINK_TIME 500000  // Microseconds
+#define EAT_TIME 500000    // Microseconds
+
+omp_lock_t forks[NUM_PHILOSOPHERS];
+
+void think(int id) {
+    printf("Philosopher %d is thinking...\n", id);
+    usleep(rand() % THINK_TIME);
+}
+
+void eat(int id) {
+    printf("Philosopher %d is eating...\n", id);
+    usleep(rand() % EAT_TIME);
+}
+
+void philosopher(int id) {
+    int left = id;
+    int right = (id + 1) % NUM_PHILOSOPHERS;
+
+    while (1) {
+        think(id);
+
+        // To avoid deadlock, pick up forks in a specific order
+        if (id % 2 == 0) {  // Even philosophers pick left first
+            omp_set_lock(&forks[left]);
+            printf("Philosopher %d picked up left fork %d\n", id, left);
+            omp_set_lock(&forks[right]);
+            printf("Philosopher %d picked up right fork %d\n", id, right);
+        } else {  // Odd philosophers pick right first
+            omp_set_lock(&forks[right]);
+            printf("Philosopher %d picked up right fork %d\n", id, right);
+            omp_set_lock(&forks[left]);
+            printf("Philosopher %d picked up left fork %d\n", id, left);
+        }
+
+        eat(id);
+
+        // Release forks
+        omp_unset_lock(&forks[left]);
+        printf("Philosopher %d put down left fork %d\n", id, left);
+        omp_unset_lock(&forks[right]);
+        printf("Philosopher %d put down right fork %d\n", id, right);
+    }
+}
+
+int main() {
+    srand(time(NULL));
+
+    // Initialize locks for each fork
+    for (int i = 0; i < NUM_PHILOSOPHERS; i++) {
+        omp_init_lock(&forks[i]);
+    }
+
+    // Run philosophers in parallel
+    #pragma omp parallel num_threads(NUM_PHILOSOPHERS)
+    {
+        int id = omp_get_thread_num();
+        philosopher(id);
+    }
+
+    // Destroy locks (never reached in infinite loop)
+    for (int i = 0; i < NUM_PHILOSOPHERS; i++) {
+        omp_destroy_lock(&forks[i]);
+    }
+
+    return 0;
+}
+
+---------------------------------------------------------------------------------------------
+
+C OpenMP Code for Bus Station
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <omp.h>
+#include <unistd.h>
+
+#define MAX_PASSENGERS 20  // Total passengers in the queue
+#define BUS_SEATS 5        // Seats available on the bus
+
+omp_lock_t lock;
+int queue_count = MAX_PASSENGERS; // Passengers waiting in the queue
+int boarded = 0;                  // Passengers who have boarded
+
+void passenger_boarding(int id) {
+    printf("Passenger %d is boarding...\n", id);
+    usleep(rand() % 1000);
+}
+
+void bulk_boarding() {
+    printf("Bus arrives with %d seats available.\n", BUS_SEATS);
+
+    #pragma omp parallel
+    {
+        while (1) {
+            omp_set_lock(&lock);
+            if (queue_count > 0 && boarded < BUS_SEATS) {
+                int id = MAX_PASSENGERS - queue_count + 1;
+                queue_count--;
+                boarded++;
+                omp_unset_lock(&lock);
+                
+                passenger_boarding(id);
+            } else {
+                omp_unset_lock(&lock);
+                break;  // No more seats or no more passengers
+            }
+        }
+    }
+
+    printf("Bus departs with %d passengers.\n", boarded);
+}
+
+void sequential_boarding() {
+    printf("Bus arrives with %d seats available.\n", BUS_SEATS);
+
+    int last_passenger = -1;
+
+    while (boarded < BUS_SEATS && queue_count > 0) {
+        omp_set_lock(&lock);
+        if (queue_count > 0 && boarded < BUS_SEATS) {
+            int id = MAX_PASSENGERS - queue_count + 1;
+            queue_count--;
+            boarded++;
+            last_passenger = id;
+            omp_unset_lock(&lock);
+            
+            passenger_boarding(id);
+        } else {
+            omp_unset_lock(&lock);
+        }
+    }
+
+    if (last_passenger != -1) {
+        printf("Passenger %d tells the driver to leave.\n", last_passenger);
+    }
+
+    printf("Bus departs with %d passengers.\n", boarded);
+}
+
+int main() {#include <stdio.h>
+#include <omp.h>
+
+int main() {
+    int N = 100;  // Sum of first N natural numbers
+    int sum = 0;
+
+    #pragma omp parallel for
+    for (int i = 1; i <= N; i++) {
+        #pragma omp critical
+        sum += i;
+    }
+
+    printf("Sum of first %d natural numbers is: %d\n", N, sum);
+    return 0;
+}
+
+    srand(time(NULL));
+    omp_init_lock(&lock);
+
+    printf("\n--- Bulk Boarding Approach ---\n");
+    queue_count = MAX_PASSENGERS;
+    boarded = 0;
+    bulk_boarding();
+
+    printf("\n--- Sequential Boarding Approach ---\n");
+    queue_count = MAX_PASSENGERS;
+    boarded = 0;
+    sequential_boarding();
+
+    omp_destroy_lock(&lock);
+    return 0;
+}
+
+-----------------------------------------------------------------------------------
+
+C OpenMP Code for Sum of Natural Numbers
+
+#include <stdio.h>
+#include <omp.h>
+
+int main() {
+    int N = 100;  // Sum of first N natural numbers
+    int sum = 0;
+
+    #pragma omp parallel for
+    for (int i = 1; i <= N; i++) {
+        #pragma omp critical
+        sum += i;
+    }
+
+    printf("Sum of first %d natural numbers is: %d\n", N, sum);
+    return 0;
+}
+
+------------------------------------------------------------------------------------
+
+OpenMP C Program for Loop-Carried Dependence
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <omp.h>
+
+#define N 10  // Array size
+
+int main() {
+    int A[N], B[N], C[N];
+
+    // Initialize arrays
+    for (int i = 0; i < N; i++) {
+        A[i] = i + 1;
+        B[i] = (i + 1) * 2;
+    }
+
+    // Sequential Calculation with Loop-Carried Dependency
+    printf("\nSequential Execution:\n");
+    C[0] = A[0] + B[0];  // Base case
+    printf("C[0] = %d\n", C[0]);
+
+    for (int i = 1; i < N; i++) {
+        C[i] = C[i - 1] + A[i] * B[i];
+        printf("C[%d] = %d\n", i, C[i]);
+    }
+
+    // Correct Parallel Approach using Prefix-Sum Method
+    int C_parallel[N];
+
+    printf("\nParallel Execution with Dependency Handling:\n");
+
+    // Step 1: Compute independent partial sums in parallel
+    int prefix_sum[N];
+    prefix_sum[0] = A[0] * B[0];
+
+    #pragma omp parallel for
+    for (int i = 1; i < N; i++) {
+        prefix_sum[i] = A[i] * B[i];
+    }
+
+    // Step 2: Compute exclusive prefix sum sequentially to resolve dependency
+    C_parallel[0] = prefix_sum[0];
+    for (int i = 1; i < N; i++) {
+        C_parallel[i] = C_parallel[i - 1] + prefix_sum[i];
+    }
+
+    // Print parallel results
+    for (int i = 0; i < N; i++) {
+        printf("C_parallel[%d] = %d\n", i, C_parallel[i]);
+    }
+
+    return 0;
+}
+
+--------------------------------------------------------------------------------------
+
+C OpenMP Code Demonstrating Data Race
+
+#include <stdio.h>
+#include <omp.h>
+
+int main() {
+    int shared_var = 0; // Shared variable
+
+    #pragma omp parallel for
+    for (int i = 0; i < 10000; i++) {
+        shared_var++; // Data race occurs here
+    }
+
+    printf("Final value of shared_var: %d\n", shared_var);
+    return 0;
+}
+
+---------------------------------------------------------------------------------------
+
+
+OpenMP C Program: Managing Shared & Private Data
+
+#include <stdio.h>
+#include <omp.h>
+
+int main() {
+    int sharedVar = 0; // Shared among all threads
+
+    #pragma omp parallel 
+    {
+        int privateVar = omp_get_thread_num(); // Each thread has its own private copy
+
+        // Updating sharedVar safely inside a critical section
+        #pragma omp critical
+        {
+            sharedVar += privateVar;
+            printf("Thread %d updated sharedVar. Current value: %d\n", privateVar, sharedVar);
+        }
+
+        // Demonstrate private variable usage
+        printf("Thread %d has privateVar = %d\n", privateVar, privateVar);
+    }
+
+    // Final value of sharedVar after all threads have executed
+    printf("\nFinal value of sharedVar: %d\n", sharedVar);
+
+    return 0;
+}
+
+--------------------------------------------------------------------------------------------------
+
+
+
+ 
